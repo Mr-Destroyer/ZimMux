@@ -1,0 +1,11 @@
+# Installer backups of a pre-existing ~/.tmux.conf
+*.bak
+*.bak.*
+*.backup
+backups/
+
+# Logs
+*.log
+
+# macOS
+.DS_Store
