@@ -1,21 +1,8 @@
-# assets/
+# assets/ vs screenshots/
 
-Drop the theme preview here as **`preview.png`**.
+Theme screenshots now live in **`screenshots/`** at the repo root
+(`multi-agent-panes.png`, `keybinding-help.png`, `zoom-session-tree.png`),
+embedded directly in the root `README.md`.
 
-`README.md` at the repo root references it as `assets/preview.png`, so the image
-appears at the top of the GitHub page as soon as the file exists. Until then that
-image renders as a broken link.
-
-## Suggested capture
-
-A screenshot that shows the palette doing real work, rather than an empty prompt:
-
-- two or three panes, so the active/inactive border contrast (`accent` vs `edge`)
-  and the `panel` fill are both visible
-- the status bar in frame, with at least one window in an activity state so
-  `red` / `yellow` appear
-- a real command's output — the palette is tuned for text, and an empty terminal
-  undersells it
-
-Capture at roughly 1600×900 and keep the file under ~500 KB. Don't commit
-generated or synthetic images here; this directory is for real captures only.
+This `assets/` directory is kept for extra artwork (logo, banner, demo GIFs).
+Same rule as before: real captures only, roughly 1600×900, under ~500 KB.

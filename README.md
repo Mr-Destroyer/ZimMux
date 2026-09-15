@@ -2,18 +2,76 @@
 
 A one-file tmux theme with a calm, high-contrast palette and Alt-key bindings that stay out of your way — inspired by [herdr.dev](https://herdr.dev)'s Ink.
 
-![ZimMux preview](assets/preview.png)
+## Preview
 
-> The preview image lives at `assets/preview.png`. See [`assets/README.md`](assets/README.md) if it isn't rendering yet.
+Three agents working side by side — lavender marks the focused pane, everything else falls back to dim edge lines:
 
-## Features
+![ZimMux with three agent panes](screenshots/multi-agent-panes.png)
 
-- **One file.** The entire theme is a single `tmux.conf`. No plugin manager, no TPM, no dependencies.
-- **Palette-first.** Every colour is a named token in one block at the top of the file, so retheming is a find-and-replace rather than a hunt.
-- **Alt-key bindings.** Pane and window navigation without a prefix chord — `Alt+ijkl` moves, the rest is muscle memory.
-- **Mouse-native.** Click to focus a pane, drag to resize, wheel to scroll history.
-- **Quiet status bar.** Reads as part of the terminal, not a separate chrome layer.
-- **Reversible install.** `install.sh` backs up your existing config before touching anything.
+The built-in keybinding help (`prefix` `?`), fully themed:
+
+![Themed keybinding help](screenshots/keybinding-help.png)
+
+Zoomed pane plus the session tree — note the teal `zoom` chip in the status bar:
+
+![Zoomed pane and session tree](screenshots/zoom-session-tree.png)
+
+## What it looks like
+
+- **Pane borders.** Thin single lines. Inactive panes get a faint grey edge; the focused pane gets a bold **lavender** border with a label showing the pane name (if set via `tmux-agent name`), working directory, and pane id.
+- **Status bar.** Dark ground strip along the bottom:
+  - left: a session pill (`◉ session-name`) plus an amber `PREFIX` chip that only appears while the prefix key is held;
+  - middle: window tabs — the active one is a lavender pill, the rest are dim;
+  - right: a teal `zoom` chip when zoomed, pane count, clock, date, and hostname.
+- **Everything else matches.** Messages, menus, copy-mode selection, search matches, and the clock all use the same Ink tokens — no default tmux yellow leaking through.
+
+## Installation
+
+Prerequisites: `tmux` 3.4 or newer, `git`, and a truecolor (24-bit) terminal — kitty, Alacritty, iTerm2, Windows Terminal, WezTerm, or similar. On a 256-colour terminal the theme still loads but colours are approximated.
+
+```sh
+git clone https://github.com/<your-username>/ZimMux.git
+cd ZimMux
+./install.sh
+```
+
+Then reload any running tmux server:
+
+```sh
+tmux source-file ~/.config/tmux/tmux.conf
+```
+
+or press `prefix` then `r` inside tmux.
+
+## Setup process
+
+`install.sh` is idempotent — safe to re-run any time. In order, it:
+
+1. **Backs up** your existing config (if any) to a timestamped file — `~/.agent-mux/backups/tmux.conf.<timestamp>.bak` (or `~/.config/tmux/backups/` if that tree doesn't exist) — and prints the exact path. It refuses to clobber a directory sitting at the target path.
+2. **Symlinks** this repo's `tmux.conf` to `~/.config/tmux/tmux.conf`. Symlink, not copy: `git pull` updates your live theme, no reinstall needed.
+3. **Reloads** the running tmux server if there is one, and tells you if the reload failed.
+4. Prints **undo instructions** (remove the symlink, copy the backup back).
+
+Two environment overrides for non-standard setups:
+
+```sh
+TMUX_CONF_TARGET=~/.tmux.conf TMUX_BACKUP_DIR=~/tmux-backups ./install.sh
+```
+
+To confirm the theme loaded correctly without eyeballing it:
+
+```sh
+./tests/verify.sh   # 54 checks, exit 0 on success
+```
+
+## Understanding — how it works
+
+- **One file, no plugins.** The whole theme is `tmux.conf`. No TPM, no plugin manager, no background daemons. Delete the symlink and it's gone.
+- **Palette-first.** Every colour is a named token in one comment block at the top of `tmux.conf` (ground, panel, edge, ink, dim, faint, accent, green, yellow, red, teal, muted), used as literal hex inline. Retheming is find-and-replace — see [docs/CUSTOMIZATION.md](docs/CUSTOMIZATION.md).
+- **Symlink model.** Because the installed config *is* the repo file, edits apply on next reload and updates arrive via `git pull`. Re-running the installer when the symlink already points here is a no-op (no duplicate backup).
+- **Clipboard without config.** At load, a cascading `if-shell` probe picks the first available copier — `clip.exe` (WSL2) → `pbcopy` (macOS) → `xclip` → `xsel` → discard fallback — stores it in the `@clip` user option, and both mouse-drag bindings use it. Mouse drag-release copies straight to the system clipboard on Linux, macOS, and WSL2.
+- **Self-locating reload.** The `prefix` `r` binding resolves the config's real path via `#{config_files}`, so it works whether tmux loaded the repo file directly or through the symlink.
+- **Tested, not eyeballed.** `tests/verify.sh` boots a throwaway tmux server (`-L` socket, no touch to your live server) against the repo file and asserts 54 things: every binding, every colour-bearing option, the `@clip` resolution. It also ships a negative test proving the suite fails on real regressions.
 
 ## Palette
 
@@ -31,32 +89,6 @@ A one-file tmux theme with a calm, high-contrast palette and Alt-key bindings th
 | `red` | `#c73e3e` | Activity, error |
 | `teal` | `#94e2d5` | Copy mode, selection |
 | `muted` | `#55534a` | Disabled, inactive marks |
-
-## Install
-
-```sh
-git clone https://github.com/<your-username>/ZimMux.git
-cd ZimMux
-./install.sh
-```
-
-`install.sh` **symlinks** this repo's `tmux.conf` to `~/.config/tmux/tmux.conf` — it does not copy it, so `git pull` updates your live theme. An existing config is backed up first and the backup path is printed. Re-running the installer is a no-op when the symlink already points here.
-
-Reload an already-running server with:
-
-```sh
-tmux source-file ~/.config/tmux/tmux.conf
-```
-
-or press `prefix` then `r`. To check the theme loaded correctly without starting a session:
-
-```sh
-./tests/verify.sh
-```
-
-**Overrides.** `TMUX_CONF_TARGET` changes where the symlink lands; `TMUX_BACKUP_DIR` changes where backups go.
-
-**Truecolor.** The palette is 24-bit hex, so it needs a truecolor terminal (kitty, iTerm2, Windows Terminal, Alacritty, …). On a 256-colour terminal the theme still loads, but the colours will be approximated.
 
 ## Keybindings
 
@@ -101,6 +133,13 @@ tmux kill-server        # or: tmux source-file ~/.config/tmux/tmux.conf
 The backup filename carries a timestamp — `tmux.conf.20260916-022732.bak` — so list the directory and pick the one you want. (A second run inside the same second appends `-1`, `-2`, … .)
 
 To remove the theme without restoring anything, delete the symlink and start a fresh server. Deleting the symlink leaves the repo untouched; if you never had a config before installing, there is nothing to restore.
+
+## Author
+
+Made by **Mr-Destroyer** (Zim).
+
+- YouTube: [@Study_hard](https://www.youtube.com/@Study_hard)
+- Instagram: [zimthegoat](https://www.instagram.com/zimthegoat)
 
 ## Credits
 
