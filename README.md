@@ -30,7 +30,7 @@ Zoomed pane plus the session tree — note the teal `zoom` chip in the status ba
 Prerequisites: `tmux` 3.4 or newer, `git`, and a truecolor (24-bit) terminal — kitty, Alacritty, iTerm2, Windows Terminal, WezTerm, or similar. On a 256-colour terminal the theme still loads but colours are approximated.
 
 ```sh
-git clone https://github.com/<your-username>/ZimMux.git
+git clone https://github.com/Mr-Destroyer/ZimMux.git
 cd ZimMux
 ./install.sh
 ```
@@ -43,10 +43,19 @@ tmux source-file ~/.config/tmux/tmux.conf
 
 or press `prefix` then `r` inside tmux.
 
+**Bundling the engine.** ZimMux is theme-only; the agent-mux engine (`tmux-agent` CLI, session commands, `/agent-mux` skill) stays a separate upstream project. To install both in one shot:
+
+```sh
+./install.sh --with-agent-mux
+```
+
+This runs the upstream installer with `--no-config` *first*, so its stock config never replaces the theme — then the symlink step lays ZimMux over the top as usual. Already have agent-mux? The engine step detects it and skips itself.
+
 ## Setup process
 
 `install.sh` is idempotent — safe to re-run any time. In order, it:
 
+0. **(only with `--with-agent-mux`)** installs the upstream agent-mux engine with `--no-config`, skipping itself if `agent-mux` is already available. Runs before everything below so its tmux dependency is satisfied.
 1. **Backs up** your existing config (if any) to a timestamped file — `~/.agent-mux/backups/tmux.conf.<timestamp>.bak` (or `~/.config/tmux/backups/` if that tree doesn't exist) — and prints the exact path. It refuses to clobber a directory sitting at the target path.
 2. **Symlinks** this repo's `tmux.conf` to `~/.config/tmux/tmux.conf`. Symlink, not copy: `git pull` updates your live theme, no reinstall needed.
 3. **Reloads** the running tmux server if there is one, and tells you if the reload failed.
